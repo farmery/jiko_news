@@ -16,6 +16,7 @@ class NavDrawer extends StatelessWidget {
     List titles = [
       ['Home', CupertinoIcons.home],
       ['Discover', CupertinoIcons.search],
+      ['Sources', CupertinoIcons.news],
     ];
     final navController = Provider.of<NavController>(context, listen: false);
     return Container(
@@ -31,12 +32,13 @@ class NavDrawer extends StatelessWidget {
                     navController.navigateToScreen(index);
                     if (index == 0) {
                       Navigator.pop(context);
-                      Navigator.pushNamed(context, Home);
+                      Navigator.pushReplacementNamed(context, Home);
                     } else if (index == 1) {
                       Navigator.pop(context);
-                      Future.delayed(Duration(milliseconds: 200)).then((value) {
-                        Navigator.pushNamed(context, Discover);
-                      });
+                      Navigator.pushReplacementNamed(context, Discover);
+                    } else if (index == 2) {
+                      Navigator.pop(context);
+                      Navigator.pushReplacementNamed(context, Sources);
                     }
                   },
             child: ListTile(
@@ -44,7 +46,7 @@ class NavDrawer extends StatelessWidget {
                   color:
                       activeScreenIndex == index ? Colors.white : Colors.grey),
               tileColor: activeScreenIndex == index
-                  ? Theme.of(context).accentColor
+                  ? Theme.of(context).colorScheme.secondary
                   : Colors.transparent,
               title: Text(titles[index][0],
                   style: activeScreenIndex == index

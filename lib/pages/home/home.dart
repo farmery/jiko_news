@@ -44,6 +44,18 @@ class _HomeState extends State<Home> {
     }
   }
 
+  Future<List<Article>?> queryArticles(String query) async {
+    try {
+      api.getArticles({
+        'apiKey': API_KEY,
+        'language': 'en',
+        'q': query,
+      }, type: '/v2/top-headlines');
+    } catch (e) {
+      print(e.toString);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -88,29 +100,30 @@ class _HomeState extends State<Home> {
                 child: Icon(Icons.menu, color: Colors.white),
               ),
               flexibleSpace: FlexibleSpaceBar(
-                background: !isRecentStackEmpty
-                    ? Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary,
-                          image: DecorationImage(
-                            fit: BoxFit.cover,
-                            colorFilter: ColorFilter.srgbToLinearGamma(),
-                            image: NetworkImage(
-                                mostRecentArticle!.urlToImage ?? ''),
+                  background: !isRecentStackEmpty
+                      ? Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary,
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              colorFilter: ColorFilter.srgbToLinearGamma(),
+                              image: NetworkImage(
+                                  mostRecentArticle!.urlToImage ?? ''),
+                            ),
                           ),
-                        ),
-                      )
-                    : Container(
-                        height: 250,
-                        decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.secondary)),
-                title: Text(
-                  !isRecentStackEmpty ? mostRecentArticle!.title! : 'Jiko News',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
+                        )
+                      : Container(
+                          height: 250,
+                          decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.secondary)),
+                  title: Text(
+                    !isRecentStackEmpty
+                        ? 'Continue Reading...' + mostRecentArticle!.title!
+                        : 'Jiko News',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  )),
               expandedHeight: 300,
             ),
             SliverToBoxAdapter(

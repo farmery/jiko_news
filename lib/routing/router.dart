@@ -5,6 +5,7 @@ import 'package:jiko_news/pages/discover/discover.dart';
 import 'package:jiko_news/pages/home/home.dart';
 import 'package:jiko_news/pages/home/home_viewmodel.dart';
 import 'package:jiko_news/pages/news_detail/news_detail.dart';
+import 'package:jiko_news/pages/sources/sources.dart';
 import 'package:provider/provider.dart';
 
 Route<dynamic> generateRoute(RouteSettings settings) {
@@ -18,6 +19,8 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case 'news_detail':
       return CupertinoPageRoute(
           builder: (_) => NewsDetail(article: settings.arguments as Article));
+    case 'sources':
+      return CupertinoPageRoute(builder: (_) => Sources());
     default:
       return CupertinoPageRoute(builder: (_) => Home());
   }
