@@ -1,16 +1,17 @@
 # jiko_news
 
-A new Flutter project.
+A simple News app made using the flutter cross-platform framework and the NewsApi as my data source.
 
-## Getting Started
+![Alt Text](video.mp4)
 
-This project is a starting point for a Flutter application.
+## installation
+Clone this repo, then create a file named api_key.dart in the services folder then create a const string named API_KEY and assign your api key to it.
+Note: Sign up for [News Api](https://newsapi.org/) to receive your api_key
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## features
+-View headlines
+-Open Article and view the article details
+-Search for an article
+-View list of articles based on category
+-View list of articles based on the articles source
