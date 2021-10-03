@@ -10,8 +10,8 @@ Note: Sign up for [News Api](https://newsapi.org/) to receive your api_key
 
 
 ## features
--View headlines
--Open Article and view the article details
--Search for an article
--View list of articles based on category
--View list of articles based on the articles source
+- View headlines
+- Open Article and view the article details
+- Search for an article
+- View list of articles based on category
+- View list of articles based on the articles source
