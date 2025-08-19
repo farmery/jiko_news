@@ -53,7 +53,7 @@ class _DiscoverState extends State<Discover> with TickerProviderStateMixin {
                 floating: true,
                 snap: true,
                 actions: [
-                  IconButton(onPressed: () {}, icon: Icon(Icons.notifications_outlined, color: Theme.of(context).primaryColor)),
+                  IconButton(onPressed: () {}, icon: Icon(Icons.notifications_outlined, color: Colors.black54)),
                 ],
                 backgroundColor: Colors.grey[100],
                 leading: CupertinoButton(
