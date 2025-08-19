@@ -1,15 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:jiko_news/model/article.dart';
 import 'package:jiko_news/pages/home/home_viewmodel.dart';
+import 'package:jiko_news/pages/home/headline_item.dart';
+import 'package:jiko_news/pages/home/search_screen.dart';
 import 'package:jiko_news/services/api.dart';
 import 'package:jiko_news/services/api_key.dart';
 import 'package:provider/provider.dart';
-import '../../nav_controller.dart';
-import '../../nav_drawer.dart';
-import 'headline_item.dart';
-import 'search_screen.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -20,72 +17,103 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final GlobalKey<ScaffoldState> key = GlobalKey();
-  final api = Api();
-  late PagingController<int, Article> pagingController;
-  Future<void> fetchPage(int pageKey) async {
+  final Api _api = Api();
+  final List<Article> _articles = [];
+  bool _isLoading = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
+  Object? _error;
+
+  Future<void> _fetchArticles() async {
+    if (_isLoading || !_hasMore) return;
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
     try {
-      final newItems = await api.getArticles(
+      final newItems = await _api.getArticles(
         {
           'apiKey': API_KEY,
           'language': 'en',
-          'page': pageKey.toString(),
+          'page': _currentPage.toString(),
         },
         type: '/v2/top-headlines',
       );
-      final isLastPage = newItems.length < 20;
-      if (isLastPage) {
-        pagingController.appendLastPage(newItems);
-      } else {
-        final nextPageKey = pageKey + 1;
-        pagingController.appendPage(newItems, nextPageKey);
-      }
+
+      setState(() {
+        _isLoading = false;
+        _articles.addAll(newItems);
+        _hasMore = newItems.length == 20; // Assuming 20 items per page
+        _currentPage++;
+      });
     } catch (error) {
-      pagingController.error = error;
+      setState(() {
+        _isLoading = false;
+        _error = error;
+      });
     }
   }
 
   Future<List<Article>?> queryArticles(String query) async {
     try {
-      api.getArticles({
-        'apiKey': API_KEY,
-        'language': 'en',
-        'q': query,
-      }, type: '/v2/top-headlines');
+      return await _api.getArticles(
+        {
+          'apiKey': API_KEY,
+          'language': 'en',
+          'q': query,
+        },
+        type: '/v2/top-headlines',
+      );
     } catch (e) {
-      print(e.toString);
+      print(e.toString());
+      return null;
     }
   }
 
   @override
   void initState() {
     super.initState();
-    pagingController = PagingController(firstPageKey: 1);
-    pagingController.addPageRequestListener((pageKey) {
-      fetchPage(pageKey);
-    });
+    _fetchArticles();
   }
 
   @override
   Widget build(BuildContext context) {
-    final navController = Provider.of<NavController>(context);
     final viewModel = Provider.of<HomeViewmodel>(context);
     final mostRecentArticle = viewModel.mostRecentArticle;
     bool isRecentStackEmpty = viewModel.recentArticles.isEmpty;
+
+    if (_error != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $_error'),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _fetchArticles,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return SafeArea(
       child: Scaffold(
         key: key,
-        drawer: Drawer(
-          child: NavDrawer(activeScreenIndex: navController.activeScreenIndex),
-        ),
         body: CustomScrollView(
           slivers: [
             SliverAppBar(
               backgroundColor: Colors.black.withOpacity(0.8),
               pinned: true,
-              iconTheme: IconThemeData(color: Colors.white),
+              iconTheme: const IconThemeData(color: Colors.white),
               actions: [
                 CupertinoButton(
-                  child: Icon(Icons.search, color: Colors.white),
+                  child: const Icon(Icons.search, color: Colors.white),
                   onPressed: () {
                     showSearch(context: context, delegate: SearchScreen());
                   },
@@ -97,54 +125,67 @@ class _HomeState extends State<Home> {
                     key.currentState!.openDrawer();
                   }
                 },
-                child: Icon(Icons.menu, color: Colors.white),
+                child: const Icon(Icons.menu, color: Colors.white),
               ),
               flexibleSpace: FlexibleSpaceBar(
-                  background: !isRecentStackEmpty
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.secondary,
-                            image: DecorationImage(
-                              fit: BoxFit.cover,
-                              colorFilter: ColorFilter.srgbToLinearGamma(),
-                              image: NetworkImage(
-                                  mostRecentArticle!.urlToImage ?? ''),
-                            ),
+                background: !isRecentStackEmpty
+                    ? Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondary,
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            colorFilter: const ColorFilter.srgbToLinearGamma(),
+                            image: NetworkImage(
+                                mostRecentArticle!.urlToImage ?? ''),
                           ),
-                        )
-                      : Container(
-                          height: 250,
-                          decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.secondary)),
-                  title: Text(
-                    !isRecentStackEmpty
-                        ? 'Continue Reading...' + mostRecentArticle!.title!
-                        : 'Jiko News',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  )),
+                        ),
+                      )
+                    : Container(
+                        height: 250,
+                        decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.secondary)),
+                title: Text(
+                  !isRecentStackEmpty
+                      ? 'Continue Reading...${mostRecentArticle!.title!}'
+                      : 'Jiko News',
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               expandedHeight: 300,
             ),
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0),
                 child: Text(
                   'Headlines',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-            PagedSliverList<int, Article>(
-              pagingController: pagingController,
-              builderDelegate: PagedChildBuilderDelegate<Article>(
-                  itemBuilder: (_, article, i) => HeadlineItem(
-                        article: article,
-                        onTap: () {
-                          viewModel.addArticle(article);
-                        },
-                      )),
-            )
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  if (index >= _articles.length) {
+                    if (!_isLoading) {
+                      _fetchArticles();
+                    }
+                    return const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+                  return HeadlineItem(
+                    article: _articles[index],
+                    onTap: () {
+                      viewModel.addArticle(_articles[index]);
+                    },
+                  );
+                },
+                childCount: _articles.length + (_hasMore ? 1 : 0),
+              ),
+            ),
           ],
         ),
       ),

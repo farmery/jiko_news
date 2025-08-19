@@ -15,11 +15,14 @@ class NewsDetail extends StatefulWidget {
 }
 
 class _NewsDetailState extends State<NewsDetail> {
+  late WebViewController _controller;
   @override
   void initState() {
     super.initState();
     // Enable hybrid composition.
-    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse(widget.article.url!));
   }
 
   @override
@@ -30,8 +33,8 @@ class _NewsDetailState extends State<NewsDetail> {
                 appBar: AppBar(
                     title: Text(widget.article.source.name!),
                     backgroundColor: Theme.of(context).colorScheme.secondary),
-                body: WebView(
-                  initialUrl: widget.article.url,
+                body: WebViewWidget(
+                  controller: _controller,
                 ),
               )
             : Container(
